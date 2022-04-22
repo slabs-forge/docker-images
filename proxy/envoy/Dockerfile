@@ -16,11 +16,14 @@ RUN cd envoy && git checkout v1.22.0
 
 RUN cd envoy && bazel build --jobs=1 -c opt --config=clang  envoy
 
-RUN cp /bld/envoy/bazel-out/k8-opt/bin/source/exe/envoy-static /bld && strip /bld/envoy-static
+RUN cp /bld/envoy/bazel-out/k8-opt/bin/source/exe/envoy-static /bld && strip -S --strip-unneeded  /bld/envoy-static
 
-FROM gcr.io/distroless/static-debian11
-#FROM debian:bullseye-slim
+FROM gcr.io/distroless/base-debian11
 
 WORKDIR /app
 
-COPY --from=build /bld/envoy-static ./envoy
+COPY --from=build /bld/envoy-static envoy
+
+COPY config.yaml /etc/envoy/config.yaml
+
+CMD [ "/app/envoy", "-c", "/etc/envoy/config.yaml"]
